@@ -29,6 +29,7 @@ KALEIDOSCOPE_INIT_PLUGINS(LEDControl, PrefixLayer);
 void setup() {
   Kaleidoscope.setup();
   PrefixLayer.prefix_layers = prefix_layers;
+  PrefixLayer.prefix_layers_length = 1;
 }
 ```
 
@@ -56,4 +57,4 @@ and properties:
 Starting from the [example][plugin:example] is the recommended way of getting
 started with the plugin.
 
- [plugin:example]: /examples/Features/PrefixLayer/PrefixLayer.ino
+ [plugin:example]: /examples/Keystrokes/PrefixLayer/PrefixLayer.ino
