@@ -23,7 +23,7 @@ class PrefixLayer : public Plugin {
  public:
   EventHandlerResult onKeyEvent(KeyEvent &event) {
     if (!(event.state & INJECTED) && keyToggledOn(event.state) && Layer.isActive(TMUX) &&
-        event.key.isKeyboardKey() && !event.key.isKeyboardModifier()) {
+        event.key != Key_NoKey && event.key.isKeyboardKey() && !event.key.isKeyboardModifier()) {
       clear_modifiers = true;
       ::Macros.tap(LCTRL(Key_B));
       clear_modifiers = false;
