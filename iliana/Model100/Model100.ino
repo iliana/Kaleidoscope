@@ -127,7 +127,7 @@ KEYMAPS(
 
 // clang-format on
 
-static kaleidoscope::plugin::LEDSolidColor solidViolet(130, 0, 120);
+static kaleidoscope::plugin::LEDSolidColor solidViolet(26, 0, 24);
 
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
   switch (macro_id) {
@@ -167,7 +167,7 @@ KALEIDOSCOPE_INIT_PLUGINS(LEDControl, LEDOff, solidViolet, PrefixLayer, Macros,
 
 void setup() {
   Kaleidoscope.setup();
-  LEDOff.activate();
+  solidViolet.activate();
 }
 
 void loop() { Kaleidoscope.loop(); }
