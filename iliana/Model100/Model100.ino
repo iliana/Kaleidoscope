@@ -4,10 +4,10 @@
 // See "LICENSE" for license details
 
 #include "Kaleidoscope.h"
-#include "Kaleidoscope-Macros.h"
+#include "Kaleidoscope-HostPowerManagement.h"
 #include "Kaleidoscope-LEDControl.h"
 #include "Kaleidoscope-LEDEffect-SolidColor.h"
-#include "Kaleidoscope-HostPowerManagement.h"
+#include "Kaleidoscope-Macros.h"
 
 enum {
   MACRO_ANY,
@@ -75,18 +75,18 @@ static kaleidoscope::plugin::LEDSolidColor solidViolet(130, 0, 120);
 
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
   switch (macro_id) {
-  case MACRO_ANY:
-    if (keyToggledOn(event.state)) {
-      event.key.setKeyCode(Key_A.getKeyCode() + (uint8_t)(millis() % 36));
-      event.key.setFlags(0);
-    }
-    break;
-  case MACRO_RESET_BOOTLOADER:
-    if (keyToggledOn(event.state)) {
-      Macros.tap(Key_Enter);
-      kaleidoscope::Runtime.device().rebootBootloader();
-    }
-    break;
+    case MACRO_ANY:
+      if (keyToggledOn(event.state)) {
+        event.key.setKeyCode(Key_A.getKeyCode() + (uint8_t)(millis() % 36));
+        event.key.setFlags(0);
+      }
+      break;
+    case MACRO_RESET_BOOTLOADER:
+      if (keyToggledOn(event.state)) {
+        Macros.tap(Key_Enter);
+        kaleidoscope::Runtime.device().rebootBootloader();
+      }
+      break;
   }
   return MACRO_NONE;
 }
@@ -94,29 +94,22 @@ const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
 /** Toggle LEDs off when suspending and on when resuming */
 void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::Event event) {
   switch (event) {
-  case kaleidoscope::plugin::HostPowerManagement::Suspend:
-    LEDControl.disable();
-    break;
-  case kaleidoscope::plugin::HostPowerManagement::Resume:
-    LEDControl.enable();
-    break;
-  case kaleidoscope::plugin::HostPowerManagement::Sleep:
-    break;
+    case kaleidoscope::plugin::HostPowerManagement::Suspend:
+      LEDControl.disable();
+      break;
+    case kaleidoscope::plugin::HostPowerManagement::Resume:
+      LEDControl.enable();
+      break;
+    case kaleidoscope::plugin::HostPowerManagement::Sleep:
+      break;
   }
 }
 
-KALEIDOSCOPE_INIT_PLUGINS(
-  LEDControl,
-  LEDOff,
-  solidViolet,
-  Macros,
-  HostPowerManagement);
+KALEIDOSCOPE_INIT_PLUGINS(LEDControl, LEDOff, solidViolet, Macros, HostPowerManagement);
 
 void setup() {
   Kaleidoscope.setup();
   LEDOff.activate();
 }
 
-void loop() {
-  Kaleidoscope.loop();
-}
+void loop() { Kaleidoscope.loop(); }
