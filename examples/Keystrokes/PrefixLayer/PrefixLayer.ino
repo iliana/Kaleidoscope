@@ -1,5 +1,14 @@
 // -*- mode: c++ -*-
 
+/* This example demonstrates the Model 01 / Model 100 butterfly logo key as a
+ * tmux prefix key. When the key is held, Ctrl-B is pressed prior to the key
+ * you pressed.
+ *
+ * This example also demonstrates the purpose of using an entire layer for this
+ * plugin: the h/j/k/l keys in the TMUX layer are swapped for arrow keys to
+ * make switching between panes easier.
+ */
+
 #include <Kaleidoscope.h>
 #include <Kaleidoscope-PrefixLayer.h>
 
@@ -8,6 +17,7 @@ enum {
   TMUX,
 };  // layers
 
+/* Used in setup() below. */
 static const kaleidoscope::plugin::PrefixLayer::Entry prefix_layers[] PROGMEM = {
   kaleidoscope::plugin::PrefixLayer::Entry(TMUX, LCTRL(Key_B)),
 };
@@ -50,6 +60,7 @@ KALEIDOSCOPE_INIT_PLUGINS(PrefixLayer);
 
 void setup() {
   Kaleidoscope.setup();
+  /* Configure the previously-defined prefix layers. */
   PrefixLayer.prefix_layers = prefix_layers;
   PrefixLayer.prefix_layers_length = 1;
 }
