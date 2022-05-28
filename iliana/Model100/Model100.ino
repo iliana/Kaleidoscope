@@ -135,6 +135,7 @@ const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
     case MACRO_RESET_BOOTLOADER:
       if (keyToggledOn(event.state)) {
         Macros.tap(Key_Enter);
+        delay(5);
         kaleidoscope::Runtime.device().rebootBootloader();
       }
       break;
