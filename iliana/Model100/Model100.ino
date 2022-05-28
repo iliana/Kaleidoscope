@@ -84,14 +84,14 @@ KEYMAPS(
    Key_Tab,  XXX,    XXX,    XXX,    XXX,    XXX,    XXX,
    Key_Home, XXX,    XXX,    XXX,    XXX,    XXX,
    Key_End,  XXX,    XXX,    XXX,    XXX,    XXX,    XXX,
-   XXX, Key_Delete, XXX, XXX,
+   ___, Key_Delete, ___, ___,
    XXX,
 
    Consumer_ScanPreviousTrack, Key_F6,                 Key_F7,                   Key_F8,                   Key_F9,          Key_F10,          Key_F11,
    Consumer_PlaySlashPause,    Consumer_ScanNextTrack, Key_LeftCurlyBracket,     Key_RightCurlyBracket,    Key_LeftBracket, Key_RightBracket, Key_F12,
                                Key_LeftArrow,          Key_DownArrow,            Key_UpArrow,              Key_RightArrow,  XXX,              XXX,
    ___,                        Consumer_Mute,          Consumer_VolumeDecrement, Consumer_VolumeIncrement, XXX,             Key_Backslash,    Key_Pipe,
-   XXX, XXX, XXX, XXX,
+   ___, ___, XXX, ___,
    XXX),
 
   [TMUX] = KEYMAP_STACKED
