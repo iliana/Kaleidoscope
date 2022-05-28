@@ -33,6 +33,11 @@ class PrefixLayer : public Plugin {
   }
 
   EventHandlerResult beforeReportingState(const KeyEvent &event) {
+    /* Suppose we input TMUX+? (so, TMUX+LShift+/). What we want is for ^B to be pressed without
+     * shift being held. `clear_modifiers` is true while our injected ^B keypress is being pressed
+     * and released; when it's true, release all modifier keys except LCtrl. (For reasons that
+     * remain mysterious to me, the modifiers come back fine on their own.)
+     */
     if (clear_modifiers) {
       for (uint8_t i = HID_KEYBOARD_LEFT_SHIFT; i <= HID_KEYBOARD_RIGHT_GUI; i++) {
         Runtime.hid().keyboard().releaseKey(Key(i, KEY_FLAGS));
