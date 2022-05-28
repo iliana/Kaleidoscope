@@ -8,6 +8,7 @@
 #include "Kaleidoscope-LEDControl.h"
 #include "Kaleidoscope-LEDEffect-SolidColor.h"
 #include "Kaleidoscope-Macros.h"
+#include "Kaleidoscope-PrefixLayer.h"
 
 enum {
   PRIMARY,
@@ -16,50 +17,13 @@ enum {
   PROG_KEY,
 };  // layers
 
-namespace kaleidoscope {
-namespace plugin {
-
-class PrefixLayer : public Plugin {
- public:
-  EventHandlerResult onKeyEvent(KeyEvent &event) {
-    if (!(event.state & INJECTED) && keyToggledOn(event.state) && Layer.isActive(TMUX) &&
-        event.key != Key_NoKey && event.key.isKeyboardKey() && !event.key.isKeyboardModifier()) {
-      clear_modifiers = true;
-      ::Macros.tap(LCTRL(Key_B));
-      clear_modifiers = false;
-    }
-
-    return EventHandlerResult::OK;
-  }
-
-  EventHandlerResult beforeReportingState(const KeyEvent &event) {
-    /* Suppose we input TMUX+? (so, TMUX+LShift+/). What we want is for ^B to be pressed without
-     * shift being held. `clear_modifiers` is true while our injected ^B keypress is being pressed
-     * and released; when it's true, release all modifier keys except LCtrl. (For reasons that
-     * remain mysterious to me, the modifiers come back fine on their own.)
-     */
-    if (clear_modifiers) {
-      for (uint8_t i = HID_KEYBOARD_LEFT_SHIFT; i <= HID_KEYBOARD_RIGHT_GUI; i++) {
-        Runtime.hid().keyboard().releaseKey(Key(i, KEY_FLAGS));
-      }
-    }
-
-    return EventHandlerResult::OK;
-  }
-
- private:
-  bool clear_modifiers = false;
-};
-
-}  // namespace plugin
-}  // namespace kaleidoscope
-
-kaleidoscope::plugin::PrefixLayer PrefixLayer;
-
 enum {
   MACRO_ANY,
   MACRO_RESET_BOOTLOADER,
 };  // macros
+
+static const kaleidoscope::plugin::PrefixLayer::Entry prefix_layers[] PROGMEM = {
+    kaleidoscope::plugin::PrefixLayer::Entry(TMUX, LCTRL(Key_B))};
 
 // clang-format off
 
@@ -168,6 +132,8 @@ KALEIDOSCOPE_INIT_PLUGINS(LEDControl, LEDOff, solidViolet, PrefixLayer, Macros,
 void setup() {
   Kaleidoscope.setup();
   solidViolet.activate();
+  PrefixLayer.prefix_layers = prefix_layers;
+  PrefixLayer.prefix_layers_length = 1;
 }
 
 void loop() { Kaleidoscope.loop(); }
