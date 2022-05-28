@@ -86,7 +86,7 @@ KEYMAPS(
                               XXX, XXX, XXX, XXX, XXX, XXX,
    XXX,                       XXX, XXX, XXX, XXX, XXX, XXX,
    XXX, XXX, XXX, XXX,
-   XXX)
+   XXX),
 )
 
 // clang-format on
