@@ -117,8 +117,8 @@ void leader_pk(uint8_t seq_index) {
 
   /* this is P + K. we want to lowercase the name */
   char buf[13] = {0};
-  uint8_t len = strlen(pk);
-  for (uint8_t i = 0; i < min(len, 12); i++) {
+  uint8_t len = min(strlen(pk), 12);
+  for (uint8_t i = 0; i < len; i++) {
     buf[i] = tolower(pk[i]);
   }
   Macros.type(buf);
