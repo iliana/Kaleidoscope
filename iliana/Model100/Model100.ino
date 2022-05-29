@@ -29,7 +29,7 @@ static const kaleidoscope::plugin::PrefixLayer::Entry prefix_layers[] PROGMEM = 
 
 KEYMAPS(
   [PRIMARY] = KEYMAP_STACKED
-  (ShiftToLayer(PROG_KEY), Key_1, Key_2, Key_3, Key_4, Key_5, Key_LEDEffectNext,
+  (ShiftToLayer(PROG_KEY), Key_1, Key_2, Key_3, Key_4, Key_5, Key_LEDToggle,
    Key_Backtick,           Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Tab,
    Key_PageUp,             Key_A, Key_S, Key_D, Key_F, Key_G,
    Key_PageDown,           Key_Z, Key_X, Key_C, Key_V, Key_B, Key_Escape,
@@ -94,20 +94,18 @@ KEYMAPS(
 static kaleidoscope::plugin::LEDSolidColor solidViolet(26, 0, 24);
 
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
-  switch (macro_id) {
-    case MACRO_ANY:
-      if (keyToggledOn(event.state)) {
+  if (keyToggledOn(event.state)) {
+    switch (macro_id) {
+      case MACRO_ANY:
         event.key.setKeyCode(Key_A.getKeyCode() + (uint8_t)(millis() % 36));
         event.key.setFlags(0);
-      }
-      break;
-    case MACRO_RESET_BOOTLOADER:
-      if (keyToggledOn(event.state)) {
+        break;
+      case MACRO_RESET_BOOTLOADER:
         Macros.tap(Key_Enter);
         delay(5);
         kaleidoscope::Runtime.device().rebootBootloader();
-      }
-      break;
+        break;
+    }
   }
   return MACRO_NONE;
 }
@@ -121,17 +119,13 @@ void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::
     case kaleidoscope::plugin::HostPowerManagement::Resume:
       LEDControl.enable();
       break;
-    case kaleidoscope::plugin::HostPowerManagement::Sleep:
-      break;
   }
 }
 
-KALEIDOSCOPE_INIT_PLUGINS(LEDControl, LEDOff, solidViolet, PrefixLayer, Macros,
-                          HostPowerManagement);
+KALEIDOSCOPE_INIT_PLUGINS(LEDControl, solidViolet, PrefixLayer, Macros, HostPowerManagement);
 
 void setup() {
   Kaleidoscope.setup();
-  solidViolet.activate();
   PrefixLayer.prefix_layers = prefix_layers;
   PrefixLayer.prefix_layers_length = 1;
 }
