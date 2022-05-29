@@ -158,8 +158,7 @@ KALEIDOSCOPE_INIT_PLUGINS(HostPowerManagement, LEDControl, solidViolet, Leader, 
 void setup() {
   Kaleidoscope.setup();
   Leader.dictionary = leader_dictionary;
-  PrefixLayer.prefix_layers = prefix_layers;
-  PrefixLayer.prefix_layers_length = 1;
+  PrefixLayer.setPrefixLayers(prefix_layers);
 }
 
 void loop() {
