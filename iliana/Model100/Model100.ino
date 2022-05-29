@@ -124,9 +124,14 @@ void leader_pk(uint8_t seq_index) {
   Macros.type(buf);
 }
 
+void leader_any(uint8_t seq_index) {
+  Macros.tap(Key(Key_A.getKeyCode() + (uint8_t)(millis() % 36), KEY_FLAGS));
+}
+
 const kaleidoscope::plugin::Leader::dictionary_t leader_dictionary[] PROGMEM =
     LEADER_DICT({LEADER_SEQ(LEAD(0), Key_P, Key_K), leader_pk},
-                {LEADER_SEQ(LEAD(0), Key_LShift, Key_P, Key_K), leader_pk});
+                {LEADER_SEQ(LEAD(0), Key_LShift, Key_P, Key_K), leader_pk},
+                {LEADER_SEQ(LEAD(0), LEAD(0)), leader_any});
 
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
   if (keyToggledOn(event.state)) {
