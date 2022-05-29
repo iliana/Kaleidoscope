@@ -11,6 +11,9 @@
 #include "Kaleidoscope-Macros.h"
 #include "Kaleidoscope-PrefixLayer.h"
 
+static uint32_t rng_value = 0x000005A0;
+uint16_t rng(uint16_t ceiling) { return (uint16_t)(rng_value >> 16) % ceiling; }
+
 enum {
   PRIMARY,
   FUNCTION,
@@ -107,7 +110,7 @@ const char *pokemon[] PROGMEM = {
 };
 
 void leader_pk(uint8_t seq_index) {
-  const char *pk = pokemon[millis() % (sizeof pokemon / sizeof pokemon[0])];
+  const char *pk = pokemon[rng(sizeof pokemon / sizeof pokemon[0])];
 
   if (seq_index == 1) {
     /* this is Shift + P + K. type the name as we have it */
@@ -125,7 +128,7 @@ void leader_pk(uint8_t seq_index) {
 }
 
 void leader_any(uint8_t seq_index) {
-  Macros.tap(Key(Key_A.getKeyCode() + (uint8_t)(millis() % 36), KEY_FLAGS));
+  Macros.tap(Key(Key_A.getKeyCode() + (uint8_t)(rng(36)), KEY_FLAGS));
 }
 
 const kaleidoscope::plugin::Leader::dictionary_t leader_dictionary[] PROGMEM =
@@ -159,4 +162,7 @@ void setup() {
   PrefixLayer.prefix_layers_length = 1;
 }
 
-void loop() { Kaleidoscope.loop(); }
+void loop() {
+  rng_value = rng_value * 0x41C64E6D + 0x6073;
+  Kaleidoscope.loop();
+}
