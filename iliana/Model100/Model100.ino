@@ -7,6 +7,7 @@
 #include "Kaleidoscope-HostPowerManagement.h"
 #include "Kaleidoscope-LEDControl.h"
 #include "Kaleidoscope-LEDEffect-SolidColor.h"
+#include "Kaleidoscope-Leader.h"
 #include "Kaleidoscope-Macros.h"
 #include "Kaleidoscope-PrefixLayer.h"
 
@@ -18,12 +19,8 @@ enum {
 };  // layers
 
 enum {
-  MACRO_ANY,
   MACRO_RESET_BOOTLOADER,
 };  // macros
-
-static const kaleidoscope::plugin::PrefixLayer::Entry prefix_layers[] PROGMEM = {
-    kaleidoscope::plugin::PrefixLayer::Entry(TMUX, LCTRL(Key_B))};
 
 // clang-format off
 
@@ -36,7 +33,7 @@ KEYMAPS(
    Key_LeftControl, Key_Backspace, Key_LeftGui, Key_LeftShift,
    ShiftToLayer(FUNCTION),
 
-   M(MACRO_ANY),       Key_6, Key_7, Key_8,     Key_9,      Key_0,         LSHIFT(LALT(Key_DownArrow)),
+   LEAD(0),            Key_6, Key_7, Key_8,     Key_9,      Key_0,         LSHIFT(LALT(Key_DownArrow)),
    Key_Enter,          Key_Y, Key_U, Key_I,     Key_O,      Key_P,         Key_Equals,
                        Key_H, Key_J, Key_K,     Key_L,      Key_Semicolon, Key_Quote,
    ShiftToLayer(TMUX), Key_N, Key_M, Key_Comma, Key_Period, Key_Slash,     Key_Minus,
@@ -91,25 +88,6 @@ KEYMAPS(
 
 // clang-format on
 
-static kaleidoscope::plugin::LEDSolidColor solidViolet(26, 0, 24);
-
-const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
-  if (keyToggledOn(event.state)) {
-    switch (macro_id) {
-      case MACRO_ANY:
-        event.key.setKeyCode(Key_A.getKeyCode() + (uint8_t)(millis() % 36));
-        event.key.setFlags(0);
-        break;
-      case MACRO_RESET_BOOTLOADER:
-        Macros.tap(Key_Enter);
-        delay(5);
-        kaleidoscope::Runtime.device().rebootBootloader();
-        break;
-    }
-  }
-  return MACRO_NONE;
-}
-
 /** Toggle LEDs off when suspending and on when resuming */
 void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::Event event) {
   switch (event) {
@@ -122,10 +100,56 @@ void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::
   }
 }
 
-KALEIDOSCOPE_INIT_PLUGINS(LEDControl, solidViolet, PrefixLayer, Macros, HostPowerManagement);
+kaleidoscope::plugin::LEDSolidColor solidViolet(26, 0, 24);
+
+const char *pokemon[] PROGMEM = {
+#include "pokemon.txt";
+};
+
+void leader_pk(uint8_t seq_index) {
+  const char *pk = pokemon[millis() % (sizeof pokemon / sizeof pokemon[0])];
+
+  if (seq_index == 1) {
+    /* this is Shift + P + K. type the name as we have it */
+    Macros.type(pk);
+    return;
+  }
+
+  /* this is P + K. we want to lowercase the name */
+  char buf[13] = {0};
+  uint8_t len = strlen(pk);
+  for (uint8_t i = 0; i < min(len, 12); i++) {
+    buf[i] = tolower(pk[i]);
+  }
+  Macros.type(buf);
+}
+
+const kaleidoscope::plugin::Leader::dictionary_t leader_dictionary[] PROGMEM =
+    LEADER_DICT({LEADER_SEQ(LEAD(0), Key_P, Key_K), leader_pk},
+                {LEADER_SEQ(LEAD(0), Key_LShift, Key_P, Key_K), leader_pk});
+
+const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
+  if (keyToggledOn(event.state)) {
+    switch (macro_id) {
+      case MACRO_RESET_BOOTLOADER:
+        Macros.tap(Key_Enter);
+        delay(5);
+        kaleidoscope::Runtime.device().rebootBootloader();
+        break;
+    }
+  }
+  return MACRO_NONE;
+}
+
+const kaleidoscope::plugin::PrefixLayer::Entry prefix_layers[] PROGMEM = {
+    kaleidoscope::plugin::PrefixLayer::Entry(TMUX, LCTRL(Key_B))};
+
+KALEIDOSCOPE_INIT_PLUGINS(HostPowerManagement, LEDControl, solidViolet, Leader, Macros,
+                          PrefixLayer);
 
 void setup() {
   Kaleidoscope.setup();
+  Leader.dictionary = leader_dictionary;
   PrefixLayer.prefix_layers = prefix_layers;
   PrefixLayer.prefix_layers_length = 1;
 }
