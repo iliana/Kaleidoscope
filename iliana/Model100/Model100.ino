@@ -4,6 +4,7 @@
 // See "LICENSE" for license details
 
 #include "Kaleidoscope.h"
+#include "Kaleidoscope-FocusSerial.h"
 #include "Kaleidoscope-HostPowerManagement.h"
 #include "Kaleidoscope-LEDControl.h"
 #include "Kaleidoscope-LEDEffect-SolidColor.h"
@@ -18,7 +19,6 @@ enum {
   PRIMARY,
   FUNCTION,
   TMUX,
-  PROG_KEY,
 };  // layers
 
 enum {
@@ -29,10 +29,10 @@ enum {
 
 KEYMAPS(
   [PRIMARY] = KEYMAP_STACKED
-  (ShiftToLayer(PROG_KEY), Key_1, Key_2, Key_3, Key_4, Key_5, Key_LEDToggle,
-   Key_Backtick,           Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Tab,
-   Key_PageUp,             Key_A, Key_S, Key_D, Key_F, Key_G,
-   Key_PageDown,           Key_Z, Key_X, Key_C, Key_V, Key_B, Key_Escape,
+  (XXX,          Key_1, Key_2, Key_3, Key_4, Key_5, Key_LEDToggle,
+   Key_Backtick, Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Tab,
+   Key_PageUp,   Key_A, Key_S, Key_D, Key_F, Key_G,
+   Key_PageDown, Key_Z, Key_X, Key_C, Key_V, Key_B, Key_Escape,
    Key_LeftControl, Key_Backspace, Key_LeftGui, Key_LeftShift,
    ShiftToLayer(FUNCTION),
 
@@ -72,21 +72,6 @@ KEYMAPS(
    ___, ___,           ___,                  ___,                   ___,             ___,              ___,
    ___, ___, ___, ___,
    ___),
-
-  [PROG_KEY] = KEYMAP_STACKED
-  (XXX, XXX, XXX, XXX, XXX, XXX, XXX,
-   XXX, XXX, XXX, XXX, XXX, XXX, XXX,
-   XXX, XXX, XXX, XXX, XXX, XXX,
-   XXX, XXX, XXX, XXX, XXX, XXX, XXX,
-   XXX, XXX, XXX, XXX,
-   XXX,
-
-   XXX,                       XXX, XXX, XXX, XXX, XXX, XXX,
-   M(MACRO_RESET_BOOTLOADER), XXX, XXX, XXX, XXX, XXX, XXX,
-                              XXX, XXX, XXX, XXX, XXX, XXX,
-   XXX,                       XXX, XXX, XXX, XXX, XXX, XXX,
-   XXX, XXX, XXX, XXX,
-   XXX),
 )
 
 // clang-format on
@@ -152,7 +137,7 @@ const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
 const kaleidoscope::plugin::PrefixLayer::Entry prefix_layers[] PROGMEM = {
     kaleidoscope::plugin::PrefixLayer::Entry(TMUX, LCTRL(Key_B))};
 
-KALEIDOSCOPE_INIT_PLUGINS(HostPowerManagement, LEDControl, solidViolet, Leader, Macros,
+KALEIDOSCOPE_INIT_PLUGINS(Focus, HostPowerManagement, LEDControl, solidViolet, Leader, Macros,
                           PrefixLayer);
 
 void setup() {
