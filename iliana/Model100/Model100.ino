@@ -90,36 +90,12 @@ void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::
 
 kaleidoscope::plugin::LEDSolidColor solidViolet(26, 0, 24);
 
-const char *pokemon[] PROGMEM = {
-#include "pokemon.txt";
-};
-
-void leader_pk(uint8_t seq_index) {
-  const char *pk = pokemon[rng(sizeof pokemon / sizeof pokemon[0])];
-
-  if (seq_index == 1) {
-    /* this is Shift + P + K. type the name as we have it */
-    Macros.type(pk);
-    return;
-  }
-
-  /* this is P + K. we want to lowercase the name */
-  char buf[13] = {0};
-  uint8_t len = min(strlen(pk), 12);
-  for (uint8_t i = 0; i < len; i++) {
-    buf[i] = tolower(pk[i]);
-  }
-  Macros.type(buf);
-}
-
 void leader_any(uint8_t seq_index) {
   Macros.tap(Key(Key_A.getKeyCode() + (uint8_t)(rng(36)), KEY_FLAGS));
 }
 
 const kaleidoscope::plugin::Leader::dictionary_t leader_dictionary[] PROGMEM =
-    LEADER_DICT({LEADER_SEQ(LEAD(0), Key_P, Key_K), leader_pk},
-                {LEADER_SEQ(LEAD(0), Key_LShift, Key_P, Key_K), leader_pk},
-                {LEADER_SEQ(LEAD(0), LEAD(0)), leader_any});
+    LEADER_DICT({LEADER_SEQ(LEAD(0), LEAD(0)), leader_any});
 
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
   if (keyToggledOn(event.state)) {
