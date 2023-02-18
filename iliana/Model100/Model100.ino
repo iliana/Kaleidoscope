@@ -4,16 +4,11 @@
 // See "LICENSE" for license details
 
 #include "Kaleidoscope.h"
-#include "Kaleidoscope-FocusSerial.h"
 #include "Kaleidoscope-HostPowerManagement.h"
 #include "Kaleidoscope-LEDControl.h"
 #include "Kaleidoscope-LEDEffect-SolidColor.h"
-#include "Kaleidoscope-Leader.h"
 #include "Kaleidoscope-Macros.h"
 #include "Kaleidoscope-PrefixLayer.h"
-
-static uint32_t rng_value = 0x000005A0;
-uint16_t rng(uint16_t ceiling) { return (uint16_t)(rng_value >> 16) % ceiling; }
 
 enum {
   PRIMARY,
@@ -22,7 +17,7 @@ enum {
 };  // layers
 
 enum {
-  MACRO_RESET_BOOTLOADER,
+  MACRO_ANY,
 };  // macros
 
 // clang-format off
@@ -36,7 +31,7 @@ KEYMAPS(
    Key_LeftControl, Key_Backspace, Key_LeftGui, Key_LeftShift,
    ShiftToLayer(FUNCTION),
 
-   LEAD(0),            Key_6, Key_7, Key_8,     Key_9,      Key_0,         LSHIFT(LALT(Key_DownArrow)),
+   M(MACRO_ANY),       Key_6, Key_7, Key_8,     Key_9,      Key_0,         LSHIFT(LALT(Key_DownArrow)),
    Key_Enter,          Key_Y, Key_U, Key_I,     Key_O,      Key_P,         Key_Equals,
                        Key_H, Key_J, Key_K,     Key_L,      Key_Semicolon, Key_Quote,
    ShiftToLayer(TMUX), Key_N, Key_M, Key_Comma, Key_Period, Key_Slash,     Key_Minus,
@@ -90,20 +85,12 @@ void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::
 
 kaleidoscope::plugin::LEDSolidColor solidViolet(26, 0, 24);
 
-void leader_any(uint8_t seq_index) {
-  Macros.tap(Key(Key_A.getKeyCode() + (uint8_t)(rng(36)), KEY_FLAGS));
-}
-
-const kaleidoscope::plugin::Leader::dictionary_t leader_dictionary[] PROGMEM =
-    LEADER_DICT({LEADER_SEQ(LEAD(0), LEAD(0)), leader_any});
-
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
   if (keyToggledOn(event.state)) {
     switch (macro_id) {
-      case MACRO_RESET_BOOTLOADER:
-        Macros.tap(Key_Enter);
-        delay(5);
-        kaleidoscope::Runtime.device().rebootBootloader();
+      case MACRO_ANY:
+        event.key.setKeyCode(Key_A.getKeyCode() + (uint8_t)(millis() % 36));
+        event.key.setFlags(0);
         break;
     }
   }
@@ -113,16 +100,11 @@ const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
 const kaleidoscope::plugin::PrefixLayer::Entry prefix_layers[] PROGMEM = {
     kaleidoscope::plugin::PrefixLayer::Entry(TMUX, LCTRL(Key_B))};
 
-KALEIDOSCOPE_INIT_PLUGINS(Focus, HostPowerManagement, LEDControl, solidViolet, Leader, Macros,
-                          PrefixLayer);
+KALEIDOSCOPE_INIT_PLUGINS(HostPowerManagement, LEDControl, solidViolet, Macros, PrefixLayer);
 
 void setup() {
   Kaleidoscope.setup();
-  Leader.dictionary = leader_dictionary;
   PrefixLayer.setPrefixLayers(prefix_layers);
 }
 
-void loop() {
-  rng_value = rng_value * 0x41C64E6D + 0x6073;
-  Kaleidoscope.loop();
-}
+void loop() { Kaleidoscope.loop(); }
