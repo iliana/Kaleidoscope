@@ -12,6 +12,7 @@
 
 enum {
   PRIMARY,
+  VVVVVV,
   FUNCTION,
   TMUX,
 };  // layers
@@ -38,18 +39,33 @@ KEYMAPS(
    Key_RightShift, Key_LeftAlt, Key_Spacebar, Key_RightControl,
    ShiftToLayer(FUNCTION)),
 
+  [VVVVVV] = KEYMAP_STACKED
+  (___, ___, ___, ___, ___, ___, ___,
+   ___, ___, ___, ___, ___, ___, ___,
+   ___, ___, ___, ___, ___, ___,
+   ___, ___, ___, ___, ___, ___, ___,
+   ___, ___, ___, ___,
+   XXX,
+
+   XXX, ___,   ___,   ___,   ___,   ___, UnlockLayer(VVVVVV),
+   ___, ___,   ___,   Key_S, ___,   ___, ___,
+        Key_A, Key_A, Key_S, Key_D, ___, ___,
+   XXX, ___,   XXX,   ___,   ___,   ___, ___,
+   ___, ___,   ___,   ___,
+   XXX),
+
   [FUNCTION] = KEYMAP_STACKED
-  (XXX,      Key_F1, Key_F2, Key_F3, Key_F4, Key_F5, XXX,
-   Key_Tab,  XXX,    XXX,    XXX,    XXX,    XXX,    XXX,
-   Key_Home, XXX,    XXX,    XXX,    XXX,    XXX,
-   Key_End,  XXX,    XXX,    XXX,    XXX,    XXX,    XXX,
+  (XXX,      Key_F1, Key_F2, Key_F3, Key_F4,            Key_F5, XXX,
+   Key_Tab,  XXX,    XXX,    XXX,    XXX,               XXX,    XXX,
+   Key_Home, XXX,    XXX,    XXX,    XXX,               XXX,
+   Key_End,  XXX,    XXX,    XXX,    LockLayer(VVVVVV), XXX,    XXX,
    ___, Key_Delete, ___, ___,
    XXX,
 
    Consumer_ScanPreviousTrack, Key_F6,                 Key_F7,                   Key_F8,                   Key_F9,          Key_F10,          Key_F11,
    Consumer_PlaySlashPause,    Consumer_ScanNextTrack, Key_LeftCurlyBracket,     Key_RightCurlyBracket,    Key_LeftBracket, Key_RightBracket, Key_F12,
                                Key_LeftArrow,          Key_DownArrow,            Key_UpArrow,              Key_RightArrow,  XXX,              XXX,
-   ___,                        Consumer_Mute,          Consumer_VolumeDecrement, Consumer_VolumeIncrement, XXX,             Key_Backslash,    Key_Pipe,
+   ShiftToLayer(TMUX),         Consumer_Mute,          Consumer_VolumeDecrement, Consumer_VolumeIncrement, XXX,             Key_Backslash,    Key_Pipe,
    ___, ___, XXX, ___,
    XXX),
 
@@ -70,6 +86,38 @@ KEYMAPS(
 )
 
 // clang-format on
+
+namespace kaleidoscope {
+namespace plugin {
+
+class VVVVVVMode : public kaleidoscope::Plugin {
+ public:
+  VVVVVVMode(void) {}
+
+  EventHandlerResult beforeSyncingLeds() {
+    if (Layer.isActive(VVVVVV)) {
+      cRGB color = CRGB(0, 120, 120);
+      ::LEDControl.setCrgbAt(KeyAddr(2, 2), color);   // S
+      ::LEDControl.setCrgbAt(KeyAddr(1, 4), color);   // R
+      ::LEDControl.setCrgbAt(KeyAddr(3, 4), color);   // V
+      ::LEDControl.setCrgbAt(KeyAddr(1, 9), color);   // Enter
+      ::LEDControl.setCrgbAt(KeyAddr(2, 10), color);  // H (LeftArrow)
+      ::LEDControl.setCrgbAt(KeyAddr(2, 13), color);  // L (RighArrow)
+      ::LEDControl.setCrgbAt(KeyAddr(0, 15), color);  // Num (UnlockLayer)
+    }
+    return EventHandlerResult::OK;
+  }
+
+  EventHandlerResult onLayerChange() {
+    ::LEDControl.refreshAll();
+    return EventHandlerResult::OK;
+  }
+};
+
+}  // namespace plugin
+}  // namespace kaleidoscope
+
+kaleidoscope::plugin::VVVVVVMode VVVVVVMode;
 
 /** Toggle LEDs off when suspending and on when resuming */
 void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::Event event) {
@@ -101,11 +149,17 @@ const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
 const kaleidoscope::plugin::PrefixLayer::Entry prefix_layers[] PROGMEM = {
     kaleidoscope::plugin::PrefixLayer::Entry(TMUX, LCTRL(Key_B))};
 
-KALEIDOSCOPE_INIT_PLUGINS(HostPowerManagement, LEDControl, solidViolet, Macros, PrefixLayer);
+KALEIDOSCOPE_INIT_PLUGINS(HostPowerManagement, LEDControl, solidViolet, Macros, PrefixLayer,
+                          VVVVVVMode);
 
 void setup() {
   Kaleidoscope.setup();
   PrefixLayer.setPrefixLayers(prefix_layers);
+
+  // work around https://github.com/keyboardio/Kaleidoscope/issues/1329
+  LEDControl.disable();
+  delay(100);
+  LEDControl.enable();
 }
 
 void loop() { Kaleidoscope.loop(); }
