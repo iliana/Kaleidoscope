@@ -17,7 +17,7 @@
 
 #include "kaleidoscope/plugin/TypingBreaks.h"
 
-#include <Arduino.h>                       // for PSTR, strcmp_P, F, __FlashStringHelper
+#include <Arduino.h>                       // for PSTR, F, __FlashStringHelper
 #include <Kaleidoscope-EEPROM-Settings.h>  // for EEPROMSettings
 #include <Kaleidoscope-FocusSerial.h>      // for Focus, FocusSerial
 #include <stdint.h>                        // for uint32_t, uint16_t
@@ -103,7 +103,7 @@ EventHandlerResult TypingBreaks::onKeyEvent(KeyEvent &event) {
 
   // So it seems we did not need to lock up. In this case, lets increase key
   // counters if need be.
-  if (event.addr.col() <= Runtime.device().matrix_columns / 2)
+  if (event.addr.col() < Runtime.device().matrix_columns / 2)
     left_hand_keys_++;
   else
     right_hand_keys_++;
@@ -132,41 +132,52 @@ EventHandlerResult TypingBreaks::onSetup() {
   return EventHandlerResult::OK;
 }
 
-#define FOCUS_HOOK_TYPINGBREAKS FOCUS_HOOK(TypingBreaks.focusHook,        \
-                                           "typingbreaks.idleTimeLimit\n" \
-                                           "typingbreaks.lockTimeOut\n"   \
-                                           "typingbreaks.lockLength\n"    \
-                                           "typingbreaks.leftMaxKeys\n"   \
-                                           "typingbreaks.rightMaxKeys")
-
-EventHandlerResult TypingBreaks::onFocusEvent(const char *command) {
+EventHandlerResult TypingBreaks::onFocusEvent(const char *input) {
   enum {
     IDLE_TIME_LIMIT,
     LOCK_TIMEOUT,
     LOCK_LENGTH,
     LEFT_MAX,
     RIGHT_MAX,
+    LEFT_COUNT,
+    RIGHT_COUNT,
+    LOCK_SECS_REMAINING,
   } subCommand;
 
-  if (::Focus.handleHelp(command, PSTR("typingbreaks.idleTimeLimit\n"
-                                       "typingbreaks.lockTimeOut\n"
-                                       "typingbreaks.lockLength\n"
-                                       "typingbreaks.leftMaxKeys\n"
-                                       "typingbreaks.rightMaxKeys")))
-    return EventHandlerResult::OK;
+  const char *cmd_idleTimeLimit = PSTR("typingbreaks.idleTimeLimit");
+  const char *cmd_lockTimeOut   = PSTR("typingbreaks.lockTimeOut");
+  const char *cmd_lockLength    = PSTR("typingbreaks.lockLength");
+  const char *cmd_leftMaxKeys   = PSTR("typingbreaks.leftMaxKeys");
+  const char *cmd_rightMaxKeys  = PSTR("typingbreaks.rightMaxKeys");
+  const char *cmd_leftKeys      = PSTR("typingbreaks.leftKeys");
+  const char *cmd_rightKeys     = PSTR("typingbreaks.rightKeys");
+  const char *cmd_lockSecsRem   = PSTR("typingbreaks.lockSecsRemaining");
+  if (::Focus.inputMatchesHelp(input))
+    return ::Focus.printHelp(cmd_idleTimeLimit,
+                             cmd_lockTimeOut,
+                             cmd_lockLength,
+                             cmd_leftMaxKeys,
+                             cmd_rightMaxKeys,
+                             cmd_leftKeys,
+                             cmd_rightKeys,
+                             cmd_lockSecsRem);
 
-  if (strncmp_P(command, PSTR("typingbreaks."), 13) != 0)
-    return EventHandlerResult::OK;
-  if (strcmp_P(command + 13, PSTR("idleTimeLimit")) == 0)
+  if (::Focus.inputMatchesCommand(input, cmd_idleTimeLimit))
     subCommand = IDLE_TIME_LIMIT;
-  else if (strcmp_P(command + 13, PSTR("lockTimeOut")) == 0)
+  else if (::Focus.inputMatchesCommand(input, cmd_lockTimeOut))
     subCommand = LOCK_TIMEOUT;
-  else if (strcmp_P(command + 13, PSTR("lockLength")) == 0)
+  else if (::Focus.inputMatchesCommand(input, cmd_lockLength))
     subCommand = LOCK_LENGTH;
-  else if (strcmp_P(command + 13, PSTR("leftMaxKeys")) == 0)
+  else if (::Focus.inputMatchesCommand(input, cmd_leftMaxKeys))
     subCommand = LEFT_MAX;
-  else if (strcmp_P(command + 13, PSTR("rightMaxKeys")) == 0)
+  else if (::Focus.inputMatchesCommand(input, cmd_rightMaxKeys))
     subCommand = RIGHT_MAX;
+  else if (::Focus.inputMatchesCommand(input, cmd_leftKeys))
+    subCommand = LEFT_COUNT;
+  else if (::Focus.inputMatchesCommand(input, cmd_rightKeys))
+    subCommand = RIGHT_COUNT;
+  else if (::Focus.inputMatchesCommand(input, cmd_lockSecsRem))
+    subCommand = LOCK_SECS_REMAINING;
   else
     return EventHandlerResult::OK;
 
@@ -206,6 +217,21 @@ EventHandlerResult TypingBreaks::onFocusEvent(const char *command) {
       ::Focus.read(settings.right_hand_max_keys);
     }
     break;
+  case LEFT_COUNT:
+    ::Focus.send(left_hand_keys_);
+    return EventHandlerResult::EVENT_CONSUMED;
+  case RIGHT_COUNT:
+    ::Focus.send(right_hand_keys_);
+    return EventHandlerResult::EVENT_CONSUMED;
+  case LOCK_SECS_REMAINING:
+    if (keyboard_locked_) {
+      uint16_t elapsed   = Runtime.millisAtCycleStart() / 1000 - lock_start_time_ / 1000;
+      uint16_t remaining = settings.lock_length - elapsed;
+      ::Focus.send(remaining);
+    } else {
+      ::Focus.send(0);
+    }
+    return EventHandlerResult::EVENT_CONSUMED;
   }
 
   Runtime.storage().put(settings_base_, settings);

@@ -20,39 +20,41 @@
 #include <Arduino.h>  // IWYU pragma: keep
 #include <stdint.h>   // for uint8_t
 
-#include "kaleidoscope/event_handler_result.h"  // for EventHandlerResult, EventHandlerResult::OK
+#ifdef ARDUINO_ARCH_GD32
+#include "USBCore.h"
+#endif
 
-// This is a terrible hack until Arduino#6964 gets implemented.
-// It makes the `_usbSuspendState` symbol available to us.
-extern uint8_t _usbSuspendState;
+#include "kaleidoscope/event_handler_result.h"  // for EventHandlerResult, EventHandlerResult::OK
 
 namespace kaleidoscope {
 namespace plugin {
 
-bool HostPowerManagement::was_suspended_   = false;
-bool HostPowerManagement::initial_suspend_ = true;
+bool HostPowerManagement::was_suspended_ = false;
+
+bool HostPowerManagement::isSuspended() {
+#if defined(__AVR__)
+  return USBDevice.isSuspended();
+#elif defined(ARDUINO_ARCH_GD32)
+  return USBCore().isSuspended();
+#else
+  return false;
+#endif
+}
 
 EventHandlerResult HostPowerManagement::beforeEachCycle() {
-
-#ifdef __AVR__
-  if ((_usbSuspendState & (1 << SUSPI))) {
-    if (!initial_suspend_) {
-      if (!was_suspended_) {
-        was_suspended_ = true;
-        hostPowerManagementEventHandler(Suspend);
-      } else {
-        hostPowerManagementEventHandler(Sleep);
-      }
+  if (isSuspended()) {
+    if (!was_suspended_) {
+      was_suspended_ = true;
+      hostPowerManagementEventHandler(Suspend);
+    } else {
+      hostPowerManagementEventHandler(Sleep);
     }
   } else {
-    if (initial_suspend_)
-      initial_suspend_ = false;
     if (was_suspended_) {
       was_suspended_ = false;
       hostPowerManagementEventHandler(Resume);
     }
   }
-#endif
 
   return EventHandlerResult::OK;
 }

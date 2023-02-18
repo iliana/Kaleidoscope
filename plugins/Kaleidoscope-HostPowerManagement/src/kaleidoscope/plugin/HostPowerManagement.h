@@ -34,7 +34,8 @@ class HostPowerManagement : public kaleidoscope::Plugin {
 
  private:
   static bool was_suspended_;
-  static bool initial_suspend_;
+
+  bool isSuspended();
 };
 
 }  // namespace plugin

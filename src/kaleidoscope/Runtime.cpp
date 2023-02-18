@@ -32,6 +32,8 @@ namespace kaleidoscope {
 uint32_t Runtime_::millis_at_cycle_start_;
 KeyAddr Runtime_::last_addr_toggled_on_ = KeyAddr::none();
 
+static void onUSBReset();
+
 Runtime_::Runtime_(void) {
 }
 
@@ -41,6 +43,7 @@ void Runtime_::setup(void) {
   // rest of the hooks we'll call do, they'll be able to rely on an initialized
   // device.
   device().setup();
+  device().setUSBResetHook(onUSBReset);
 
   // We are explicitly initializing the Serial port as early as possible to
   // (temporarily, hopefully) work around an issue on OSX. If we initialize
@@ -65,6 +68,9 @@ void Runtime_::setup(void) {
 void Runtime_::loop(void) {
   millis_at_cycle_start_ = millis();
 
+  if (device().pollUSBReset()) {
+    device().hid().onUSBReset();
+  }
   kaleidoscope::Hooks::beforeEachCycle();
 
   // Next, we scan the keyswitches. Any toggle-on or toggle-off events will
@@ -157,9 +163,13 @@ void Runtime_::handleKeyEvent(KeyEvent event) {
       event.key == Key_Transparent)
     return;
 
-  // If it's a built-in Layer key, we handle it here, and skip sending report(s)
-  if (event.key.isLayerKey()) {
+  // Built-in layer change keys are handled by the Layer object.
+  if (event.key.isLayerKey() || event.key.isModLayerKey()) {
     Layer.handleLayerKeyEvent(event);
+  }
+  // If the event is for a layer change key, there's no need to send a HID
+  // report, so we return early.
+  if (event.key.isLayerKey()) {
     return;
   }
 
@@ -226,6 +236,11 @@ void Runtime_::addToReport(Key key) {
   if (result == EventHandlerResult::ABORT)
     return;
 
+  if (key.isModLayerKey()) {
+    uint8_t mod = key.getKeyCode() % 8;
+    key         = Key(Key_LeftControl.getRaw() + mod);
+  }
+
   if (key.isKeyboardKey()) {
     // The only incidental Keyboard modifiers that are allowed are the ones on
     // the key that generated the event, so we strip any others before adding
@@ -289,6 +304,14 @@ void Runtime_::sendKeyboardReport(const KeyEvent &event) {
 }
 
 Runtime_ Runtime;
+
+/*
+ * Static hook function for USB reset handler. Has to be here, because there's
+ * no good way to get the global Runtime object from inside the driver object.
+ */
+static void onUSBReset() {
+  Runtime.device().hid().onUSBReset();
+}
 
 }  // namespace kaleidoscope
 

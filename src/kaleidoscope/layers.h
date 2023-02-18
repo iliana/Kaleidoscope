@@ -28,8 +28,23 @@
 #include "kaleidoscope_internal/device.h"                                 // for device
 #include "kaleidoscope_internal/shortname.h"                              // for _INIT_HID_GETSH...
 #include "kaleidoscope_internal/sketch_exploration/sketch_exploration.h"  // for _INIT_SKETCH_EX...
+// -----------------------------------------------------------------------------
+// Deprecation warning messages
+#include "kaleidoscope_internal/deprecations.h"  // for DEPRECATED
+
+#define _DEPRECATED_MESSAGE_LAYER_ACTIVATE_NEXT                             \
+  "The `Layer.activateNext() function is deprecated, and will be removed\n" \
+  "after 2023-04-06."
+
+#define _DEPRECATED_MESSAGE_LAYER_DEACTIVATE_MOST_RECENT                    \
+  "The `Layer.deactivateMostRecent() function is deprecated, and will be\n" \
+  "removed after 2023-04-06."
+// -----------------------------------------------------------------------------
 
 // clang-format off
+#ifndef MAX_ACTIVE_LAYERS
+#define MAX_ACTIVE_LAYERS 16
+#endif
 
 #define START_KEYMAPS                                                   __NL__ \
    constexpr Key keymaps_linear[][kaleidoscope_internal::device.matrix_rows * kaleidoscope_internal::device.matrix_columns] PROGMEM = {
@@ -94,12 +109,15 @@ class Layer_ {
 
   static void activate(uint8_t layer);
   static void deactivate(uint8_t layer);
+  DEPRECATED(LAYER_ACTIVATE_NEXT)
   static void activateNext();
+  DEPRECATED(LAYER_DEACTIVATE_MOST_RECENT)
   static void deactivateMostRecent();
   static void move(uint8_t layer);
 
   static uint8_t mostRecent() {
-    return active_layers_[active_layer_count_ - 1];
+    uint8_t top_layer = active_layers_[active_layer_count_ - 1];
+    return unshifted(top_layer);
   }
   static bool isActive(uint8_t layer);
 
@@ -120,8 +138,12 @@ class Layer_ {
 
  private:
   static uint8_t active_layer_count_;
-  static int8_t active_layers_[31];
+  static int8_t active_layers_[MAX_ACTIVE_LAYERS];
   static uint8_t active_layer_keymap_[kaleidoscope_internal::device.numKeys()];
+
+  static int8_t stackPosition(uint8_t layer);
+  static void remove(uint8_t stack_index);
+  static uint8_t unshifted(uint8_t layer);
 };
 }  // namespace kaleidoscope
 

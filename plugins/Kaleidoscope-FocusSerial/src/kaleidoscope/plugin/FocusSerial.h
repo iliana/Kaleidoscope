@@ -26,6 +26,15 @@
 #include "kaleidoscope/event_handler_result.h"  // for EventHandlerResult, EventHandlerResult::OK
 #include "kaleidoscope/key_defs.h"              // for Key
 #include "kaleidoscope/plugin.h"                // for Plugin
+// -----------------------------------------------------------------------------
+// Deprecation warning messages
+#include "kaleidoscope_internal/deprecations.h"  // for DEPRECATED
+
+#define _DEPRECATED_MESSAGE_FOCUS_HANDLEHELP                      \
+  "The `Focus.handleHelp()` method is deprecated. Please use\n"   \
+  "`Focus.inputMatchesHelp()` and `Focus.printHelp()` instead.\n" \
+  "This method will be removed after 2022-12-26."
+// -----------------------------------------------------------------------------
 
 // IWYU pragma: no_include "WString.h"
 
@@ -37,13 +46,28 @@ class FocusSerial : public kaleidoscope::Plugin {
   static constexpr char SEPARATOR = ' ';
   static constexpr char NEWLINE   = '\n';
 
-  bool handleHelp(const char *command,
-                  const char *help_message);
+#ifndef NDEPRECATED
+  DEPRECATED(FOCUS_HANDLEHELP)
+  bool handleHelp(const char *input, const char *help_message);
+#endif
+
+  bool inputMatchesHelp(const char *input);
+  bool inputMatchesCommand(const char *input, const char *expected);
+
+  EventHandlerResult printHelp() {
+    return EventHandlerResult::OK;
+  }
+  template<typename... Vars>
+  EventHandlerResult printHelp(const char *h1, Vars... vars) {
+    Runtime.serialPort().println((const __FlashStringHelper *)h1);
+    delayAfterPrint();
+    return printHelp(vars...);
+  }
 
   EventHandlerResult sendName(const __FlashStringHelper *name) {
     Runtime.serialPort().print(name);
     delayAfterPrint();
-    Runtime.serialPort().print(NEWLINE);
+    Runtime.serialPort().println();
     delayAfterPrint();
     return EventHandlerResult::OK;
   }
@@ -95,7 +119,7 @@ class FocusSerial : public kaleidoscope::Plugin {
     color.b = Runtime.serialPort().parseInt();
   }
   void read(char &c) {
-    c = static_cast<char>(Runtime.serialPort().read());
+    Runtime.serialPort().readBytes(&c, 1);
   }
   void read(uint8_t &u8) {
     u8 = Runtime.serialPort().parseInt();
@@ -104,19 +128,14 @@ class FocusSerial : public kaleidoscope::Plugin {
     u16 = Runtime.serialPort().parseInt();
   }
 
-  bool isEOL() {
-    int i = Runtime.serialPort().peek();
-
-    return (i == NEWLINE || i == -1);
-  }
-
+  bool isEOL();
 
   /* Hooks */
   EventHandlerResult afterEachCycle();
-  EventHandlerResult onFocusEvent(const char *command);
+  EventHandlerResult onFocusEvent(const char *input);
 
  private:
-  char command_[32];
+  char input_[32];
   uint8_t buf_cursor_ = 0;
   void printBool(bool b);
 
