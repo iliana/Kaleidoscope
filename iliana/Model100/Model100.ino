@@ -75,6 +75,7 @@ KEYMAPS(
 void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::Event event) {
   switch (event) {
     case kaleidoscope::plugin::HostPowerManagement::Suspend:
+    case kaleidoscope::plugin::HostPowerManagement::Sleep:
       LEDControl.disable();
       break;
     case kaleidoscope::plugin::HostPowerManagement::Resume:
@@ -83,7 +84,7 @@ void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::
   }
 }
 
-kaleidoscope::plugin::LEDSolidColor solidViolet(26, 0, 24);
+static kaleidoscope::plugin::LEDSolidColor solidViolet(130, 0, 120);
 
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
   if (keyToggledOn(event.state)) {
