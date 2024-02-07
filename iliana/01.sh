@@ -1,3 +1,2 @@
 #!/usr/bin/env bash
-KALEIDOSCOPE_DIR=$(git rev-parse --show-toplevel) \
-    exec make "$@" FQBN=keyboardio:avr:model01
+exec make -f "$(git rev-parse --show-toplevel)/etc/makefiles/sketch.mk" "$@" FQBN=keyboardio:avr:model01
