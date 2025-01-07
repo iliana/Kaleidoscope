@@ -4,6 +4,9 @@
 // See "LICENSE" for license details
 
 #include "Kaleidoscope.h"
+#include "Kaleidoscope-FirmwareDump.h"
+#include "Kaleidoscope-FirmwareVersion.h"
+#include "Kaleidoscope-FocusSerial.h"
 #include "Kaleidoscope-HostPowerManagement.h"
 #include "Kaleidoscope-LEDControl.h"
 #include "Kaleidoscope-LEDEffect-SolidColor.h"
@@ -101,7 +104,8 @@ const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
 const kaleidoscope::plugin::PrefixLayer::Entry prefix_layers[] PROGMEM = {
     kaleidoscope::plugin::PrefixLayer::Entry(TMUX, LCTRL(Key_B))};
 
-KALEIDOSCOPE_INIT_PLUGINS(HostPowerManagement, LEDControl, solidViolet, Macros, PrefixLayer);
+KALEIDOSCOPE_INIT_PLUGINS(Focus, FirmwareDump, FirmwareVersion, HostPowerManagement, LEDControl,
+                          solidViolet, Macros, PrefixLayer);
 
 void setup() {
   Kaleidoscope.setup();
